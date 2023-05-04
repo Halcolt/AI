@@ -1,0 +1,14 @@
+1. Thống kê
+- thống kê mỗi gerne
+	+ thời gian công chiếu trung bình
+	+ profit trung bình
+	+ rating trung bình
+- vẽ biểu đồ profit mỗi gerne theo thời gian 
+- vẽ biểu đồ rating mỗi gerne theo thời gian
+2. Đánh giá 
++ Có budget, tìm gerne có rating / profit lớn nhất (k-nearest)
+
+Dựa trên gerne:
++ có budget, có gerne, có rating, tính số ngày công chiếu thích hợp
+(thuật toán cho việc này ko liên quan profit, mặc định dữ liệu có đánh giá ngày công chiếu có tính chính xác tương đối)
+tức dùng k-means để đánh point cho budget

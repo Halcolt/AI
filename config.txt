@@ -1,0 +1,4 @@
+localhost
+root
+Bill1567
+ai
