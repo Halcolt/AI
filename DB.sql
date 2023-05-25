@@ -13,3 +13,5 @@ CREATE TABLE movies (
   rating_count INT,
   PRIMARY KEY (id)
 );
+
+select * from movies

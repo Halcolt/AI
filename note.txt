@@ -5,6 +5,7 @@
 	+ rating trung bình
 - vẽ biểu đồ profit mỗi gerne theo thời gian 
 - vẽ biểu đồ rating mỗi gerne theo thời gian
+
 2. Đánh giá 
 + Có budget, tìm gerne có rating / profit lớn nhất (k-nearest)
 
