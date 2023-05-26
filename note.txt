@@ -8,7 +8,6 @@
 
 2. Đánh giá 
 + Có budget, tìm gerne có rating / profit lớn nhất (k-nearest)
-
 Dựa trên gerne:
 + có budget, có gerne, có rating, tính số ngày công chiếu thích hợp
 (thuật toán cho việc này ko liên quan profit, mặc định dữ liệu có đánh giá ngày công chiếu có tính chính xác tương đối)
