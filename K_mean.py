@@ -23,8 +23,7 @@ def connect_to_database(): #connect to Mysql
         print(f"Error connecting to MySQL: {e}") #print error message 
         exit()
 
-
-def euclidean_distance(x1, x2): 
+def euclid(x1, x2): 
     # Calculate the Euclidean distance between two points
     distance = 0.0
     for i in range(len(x1)): # both x1, x2: budget, rating, runtime
@@ -38,12 +37,6 @@ def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
 
     # Fetch the data
     data = mycursor.fetchall()
-
-    # Close the cursor and connection
-    mycursor.close()
-    mydb.close()
-
-    # Convert the data to a list
     data = list(data)
 
     # Calculate the Euclidean distance between the input features and each data point
@@ -51,7 +44,7 @@ def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
     for item in data: # run through all row
         x = item[:-1]  # Features (budget, rating, runtime) || ": -1" all collumn except the last one
         y = item[-1]   # Target variable (gross) || last column
-        distance = euclidean_distance([budget, rating, runtime], x)
+        distance = euclid([budget, rating, runtime], x)
         distances.append((x, y, distance))
 
     # Sort the distances in ascending order
