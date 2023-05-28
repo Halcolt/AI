@@ -2,7 +2,7 @@ import mysql.connector
 import numpy as np
 
 
-def connect_to_database():
+def connect_to_database(): #connect to Mysql
     # Read MySQL config from config.txt file
     with open("config.txt") as f:
         host = f.readline().strip()
@@ -20,20 +20,18 @@ def connect_to_database():
             print('Connection Successful')
             return conn
     except mysql.connector.Error as e:
-        print(f"Error connecting to MySQL: {e}")
+        print(f"Error connecting to MySQL: {e}") #print error message 
         exit()
 
 
-def euclidean_distance(x1, x2): # check for each type: budget, rating, runtime
+def euclidean_distance(x1, x2): 
     # Calculate the Euclidean distance between two points
     distance = 0.0
-    for i in range(len(x1)):
+    for i in range(len(x1)): # both x1, x2: budget, rating, runtime
         distance += (x1[i] - x2[i]) ** 2 # i dont' use sqrt here because there is no need to check for the distance, we only need to compare distance
     return distance
 
-def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
-
-
+def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5): 
     # Execute SELECT query to get movies data filtered by genre
     query = "SELECT Budget, Rating, Runtime, Gross FROM movies WHERE Genre=%s"
     mycursor.execute(query, (genre,))
@@ -64,15 +62,14 @@ def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
 
     # Calculate the average gross of the k nearest neighbors
     total_gross = sum(neighbor[1] for neighbor in neighbors)
-    predicted_gross = total_gross / k
-
+    predicted_gross = total_gross / k   # we set the predict one to be the average of the 5 closest
     return predicted_gross
 
 # Connect to the database
 mydb = connect_to_database()
+mycursor = mydb.cursor()
 
 # Turn off safe mode
-mycursor = mydb.cursor()
 mycursor.execute("SET SQL_SAFE_UPDATES = 0")
 mydb.commit()
 
@@ -80,6 +77,7 @@ mydb.commit()
 mycursor.execute("Update movies SET Profit = Gross-Budget")
 mydb.commit()
 
+#test data
 genre = ("Action")
 budget = 100000
 rating = 7.5
@@ -91,7 +89,7 @@ budget = int(input("Budget: "))
 rating = float(input("Rating: "))
 runtime = int(input("runtime: "))
 '''
-predicted_gross = predict_gross(mydb,mycursor,genre, budget, rating, runtime)
+predicted_gross = predict_gross(mydb,mycursor,genre, budget, rating, runtime) # run predict function
 print(f"The predicted gross for a movie with genre={genre}, budget={budget}, rating={rating}, and runtime={runtime} days, is around ${predicted_gross:.2f}")
 
 # Close the cursor and connection
