@@ -24,19 +24,15 @@ def connect_to_database():
         exit()
 
 
-def euclidean_distance(x1, x2):
+def euclidean_distance(x1, x2): # check for each type: budget, rating, runtime
     # Calculate the Euclidean distance between two points
     distance = 0.0
     for i in range(len(x1)):
-        distance += (x1[i] - x2[i]) ** 2
+        distance += (x1[i] - x2[i]) ** 2 # i dont' use sqrt here because there is no need to check for the distance, we only need to compare distance
     return distance
 
-def predict_gross(genre, budget, rating, runtime, k=5):
-    # Connect to MySQL database
-    mydb = connect_to_database()
+def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
 
-    # Create a cursor object to execute SQL queries
-    mycursor = mydb.cursor()
 
     # Execute SELECT query to get movies data filtered by genre
     query = "SELECT Budget, Rating, Runtime, Gross FROM movies WHERE Genre=%s"
@@ -54,17 +50,17 @@ def predict_gross(genre, budget, rating, runtime, k=5):
 
     # Calculate the Euclidean distance between the input features and each data point
     distances = []
-    for item in data:
-        x = item[:-1]  # Features (budget, rating, runtime)
-        y = item[-1]   # Target variable (gross)
+    for item in data: # run through all row
+        x = item[:-1]  # Features (budget, rating, runtime) || ": -1" all collumn except the last one
+        y = item[-1]   # Target variable (gross) || last column
         distance = euclidean_distance([budget, rating, runtime], x)
         distances.append((x, y, distance))
 
     # Sort the distances in ascending order
-    distances.sort(key=lambda x: x[2])
+    distances.sort(key=lambda z: z[2])
 
     # Select the k nearest neighbors
-    neighbors = distances[:k]
+    neighbors = distances[:k] # take the first 5 shortest distance 
 
     # Calculate the average gross of the k nearest neighbors
     total_gross = sum(neighbor[1] for neighbor in neighbors)
@@ -84,11 +80,18 @@ mydb.commit()
 mycursor.execute("Update movies SET Profit = Gross-Budget")
 mydb.commit()
 
+genre = ("Action")
+budget = 100000
+rating = 7.5
+runtime = 120
+
+'''
 genre = input("Genre: ") 
 budget = int(input("Budget: "))
 rating = float(input("Rating: "))
 runtime = int(input("runtime: "))
-predicted_gross = predict_gross(genre, budget, rating, runtime)
+'''
+predicted_gross = predict_gross(mydb,mycursor,genre, budget, rating, runtime)
 print(f"The predicted gross for a movie with genre={genre}, budget={budget}, rating={rating}, and runtime={runtime} days, is around ${predicted_gross:.2f}")
 
 # Close the cursor and connection
