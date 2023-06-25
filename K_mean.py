@@ -1,6 +1,7 @@
 import mysql.connector
 import numpy as np
-
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 def connect_to_database(): #connect to Mysql
     # Read MySQL config from config.txt file
@@ -30,25 +31,27 @@ def euclid(x1, x2):
         distance += (x1[i] - x2[i]) ** 2 # i dont' use sqrt here because there is no need to check for the distance, we only need to compare distance
     return distance
 
-def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5): 
+def predict_gross(mycursor,genre, budget, rating, runtime):
+
     # Execute SELECT query to get movies data filtered by genre
     query = "SELECT Budget, Rating, Runtime, Gross FROM movies WHERE Genre=%s"
     mycursor.execute(query, (genre,))
 
-    # Fetch the data
-    data = mycursor.fetchall()
-    data = list(data)
+    # Load the data read drom database to data in array
+    data = list(mycursor.fetchall())
 
     # Calculate the Euclidean distance between the input features and each data point
     distances = []
-    for item in data: # run through all row
-        x = item[:-1]  # Features (budget, rating, runtime) || ": -1" all collumn except the last one
-        y = item[-1]   # Target variable (gross) || last column
-        distance = euclid([budget, rating, runtime], x)
+    for val in data: # run through all row
+        x = val[:-1]  # Features (budget, rating, runtime) || ": -1" all collumn except the last one (gross)
+        y = val[-1]   # Target variable (gross) || last column
+        distance = euclid([budget, rating, runtime], x) # first is the data from the movie need to compare, x is data from database
         distances.append((x, y, distance))
 
-    # Sort the distances in ascending order
-    distances.sort(key=lambda z: z[2])
+    # sort the [2] element (distance) in ascending order
+    distances.sort(key=lambda z: z[2]) 
+
+    k=5 # set k for the below calculation
 
     # Select the k nearest neighbors
     neighbors = distances[:k] # take the first 5 shortest distance 
@@ -58,17 +61,93 @@ def predict_gross(mydb,mycursor,genre, budget, rating, runtime, k=5):
     predicted_gross = total_gross / k   # we set the predict one to be the average of the 5 closest
     return predicted_gross
 
-# Connect to the database
-mydb = connect_to_database()
-mycursor = mydb.cursor()
 
-# Turn off safe mode
-mycursor.execute("SET SQL_SAFE_UPDATES = 0")
-mydb.commit()
+def Statistic(mycursor, genre):
+    # Execute SELECT query to get movies data filtered by genre
+    query = "SELECT Budget, Gross FROM movies WHERE Genre=%s"
+    mycursor.execute(query, (genre,))
 
-# Set Profit 
-mycursor.execute("Update movies SET Profit = Gross-Budget")
-mydb.commit()
+    # Load the data read drom database to data
+    data = mycursor.fetchall()
+
+    # Separate budget and gross into separate lists
+    budget = [val[0] for val in data]
+    gross = [val[1] for val in data]
+
+    # Convert budget and gross lists to numpy arrays
+    budget = np.array(budget).reshape(-1, 1)
+    gross = np.array(gross)
+
+    # Fit a linear regression model, aka: redline 
+    regression_model = LinearRegression()
+    regression_model.fit(budget, gross)
+
+    # Generate predicted values for the regression line
+    predicted_gross = regression_model.predict(budget)
+
+    # Plot budget vs gross
+    plt.scatter(budget, gross)
+    plt.xlabel("Budget")
+    plt.ylabel("Gross")
+    plt.title(f"Budget vs Gross for Genre: {genre}")
+
+    # Customize tick labels
+    budget_ticks = [tick / 10000000 for tick in plt.xticks()[0]]
+    gross_ticks = [tick / 10000000 for tick in plt.yticks()[0]]
+    plt.xticks(plt.xticks()[0], ['${:.1f}M'.format(tick) for tick in budget_ticks])
+    plt.yticks(plt.yticks()[0], ['${:.2f}M'.format(tick) for tick in gross_ticks])
+
+    # Plot the regression line
+    plt.plot(budget, predicted_gross, 'r-', label='Regression Line')
+    plt.show()
+
+def menu():
+    # Connect to the database
+    mydb = connect_to_database()
+    mycursor = mydb.cursor()
+
+    # Turn off safe mode
+    mycursor.execute("SET SQL_SAFE_UPDATES = 0")
+    mydb.commit()
+
+    # Set Profit
+    mycursor.execute("UPDATE movies SET Profit = Gross - Budget")
+    mydb.commit()
+
+    while True:
+        print("Menu:")
+        print("1. Statistical Analysis")
+        print("2. Gross Prediction")
+        print("3. Exit")
+
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            genre = input("Enter genre: ")
+            Statistic(mycursor, genre)
+            break
+        elif choice == "2":
+            genre = input("Enter genre: ")
+            budget = int(input("Enter budget: "))
+            rating = float(input("Enter rating: "))
+            runtime = int(input("Enter runtime: "))
+            predicted_gross = predict_gross(mycursor, genre, budget, rating, runtime)
+            print(f"The predicted gross for a movie with genre={genre}, budget={budget}, rating={rating}, and runtime={runtime} days, is around ${predicted_gross:.2f}")
+            break
+        elif choice == "3":
+            #print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+    # Close the cursor and connection
+    mycursor.close()
+    mydb.close()
+
+# Start programs
+menu()
+
+
+'''
 
 #test data
 genre = ("Action")
@@ -76,15 +155,12 @@ budget = 100000
 rating = 7.5
 runtime = 120
 
-'''
 genre = input("Genre: ") 
 budget = int(input("Budget: "))
 rating = float(input("Rating: "))
 runtime = int(input("runtime: "))
-'''
-predicted_gross = predict_gross(mydb,mycursor,genre, budget, rating, runtime) # run predict function
-print(f"The predicted gross for a movie with genre={genre}, budget={budget}, rating={rating}, and runtime={runtime} days, is around ${predicted_gross:.2f}")
 
-# Close the cursor and connection
-mycursor.close()
-mydb.close()
+'''
+
+# key improvement: predict the future gross of a type, plotting
+
