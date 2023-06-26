@@ -61,9 +61,32 @@ def predict_gross(mycursor,genre, budget, rating, runtime):
     predicted_gross = total_gross / k   # we set the predict one to be the average of the 5 closest
     return predicted_gross
 
+def calculate_average_values(mycursor, genre):
+    query = "SELECT AVG(Gross), AVG(Budget) FROM movies WHERE Genre = %s"
+    mycursor.execute(query, (genre,))
+    result = mycursor.fetchone()
+    average_gross = result[0]
+    average_budget = result[1]
+    return average_gross, average_budget
 
-def Statistic(mycursor, genre):
+def list_genres(mycursor):
+    # Execute SELECT query to get unique genres from the database
+    query = "SELECT DISTINCT Genre FROM movies"
+    mycursor.execute(query)
+    genres = mycursor.fetchall()
+
+    print("Average rate of Value(Gross / Budget):")
+    for genre in genres:
+        genre_name = genre[0]
+        average_gross, average_budget = calculate_average_values(mycursor, genre_name)
+        average_ratio = average_gross / average_budget
+        print(f"{genre_name}: {average_ratio:.2f}")
+
+
+def Statistic(mycursor):
     # Execute SELECT query to get movies data filtered by genre
+    list_genres(mycursor)
+    genre = input("Enter genre: ")
     query = "SELECT Budget, Gross FROM movies WHERE Genre=%s"
     mycursor.execute(query, (genre,))
 
@@ -122,19 +145,22 @@ def menu():
 
         choice = input("Enter your choice: ")
         if choice == "1":
-            genre = input("Enter genre: ")
-            Statistic(mycursor, genre)
+            
+            Statistic(mycursor)
             break
         elif choice == "2":
+            list_genres(mycursor)
             genre = input("Enter genre: ")
             budget = int(input("Enter budget: "))
             rating = float(input("Enter rating: "))
+            if (rating > 10 or rating < 0):
+                print("Rating is between 0.0 and 10.0, please try again")
+                exit()
             runtime = int(input("Enter runtime: "))
             predicted_gross = predict_gross(mycursor, genre, budget, rating, runtime)
             print(f"The predicted gross for a movie with genre={genre}, budget={budget}, rating={rating}, and runtime={runtime} days, is around ${predicted_gross:.2f}")
             break
         elif choice == "3":
-            #print("Exiting...")
             break
         else:
             print("Invalid choice. Please try again.")
@@ -143,24 +169,17 @@ def menu():
     mycursor.close()
     mydb.close()
 
-# Start programs
+# Main program
 menu()
 
 
 '''
-
 #test data
 genre = ("Action")
 budget = 100000
 rating = 7.5
 runtime = 120
 
-genre = input("Genre: ") 
-budget = int(input("Budget: "))
-rating = float(input("Rating: "))
-runtime = int(input("runtime: "))
-
 '''
 
-# key improvement: predict the future gross of a type, plotting
 
