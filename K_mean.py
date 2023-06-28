@@ -114,11 +114,11 @@ def Statistic(mycursor):
     plt.ylabel("Gross")
     plt.title(f"Budget vs Gross for Genre: {genre}")
 
-    # Customize tick labels
-    budget_ticks = [tick / 10000000 for tick in plt.xticks()[0]]
-    gross_ticks = [tick / 10000000 for tick in plt.yticks()[0]]
-    plt.xticks(plt.xticks()[0], ['${:.1f}M'.format(tick) for tick in budget_ticks])
-    plt.yticks(plt.yticks()[0], ['${:.2f}M'.format(tick) for tick in gross_ticks])
+    # label axis
+    budget_units = [unit / 10000000 for unit in plt.xunits()[0]]
+    gross_units = [unit / 10000000 for unit in plt.yunits()[0]]
+    plt.xunits(plt.xunits()[0], ['${:.1f}M'.format(unit) for unit in budget_units])
+    plt.yunits(plt.yunits()[0], ['${:.2f}M'.format(unit) for unit in gross_units])
 
     # Plot the regression line
     plt.plot(budget, predicted_gross, 'r-', label='Regression Line')
@@ -129,12 +129,8 @@ def menu():
     mydb = connect_to_database()
     mycursor = mydb.cursor()
 
-    # Turn off safe mode
+    # Turn off safe mode ** Always need when start init the database
     mycursor.execute("SET SQL_SAFE_UPDATES = 0")
-    mydb.commit()
-
-    # Set Profit
-    mycursor.execute("UPDATE movies SET Profit = Gross - Budget")
     mydb.commit()
 
     while True:
