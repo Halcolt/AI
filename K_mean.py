@@ -115,10 +115,10 @@ def Statistic(mycursor):
     plt.title(f"Budget vs Gross for Genre: {genre}")
 
     # label axis
-    budget_units = [unit / 10000000 for unit in plt.xunits()[0]]
-    gross_units = [unit / 10000000 for unit in plt.yunits()[0]]
-    plt.xunits(plt.xunits()[0], ['${:.1f}M'.format(unit) for unit in budget_units])
-    plt.yunits(plt.yunits()[0], ['${:.2f}M'.format(unit) for unit in gross_units])
+    budget_ticks = [tick / 10000000 for tick in plt.xticks()[0]]
+    gross_ticks = [tick / 10000000 for tick in plt.yticks()[0]]
+    plt.xticks(plt.xticks()[0], ['${:.1f}M'.format(tick) for tick in budget_ticks])
+    plt.yticks(plt.yticks()[0], ['${:.2f}M'.format(tick) for tick in gross_ticks])
 
     # Plot the regression line
     plt.plot(budget, predicted_gross, 'r-', label='Regression Line')
