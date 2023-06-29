@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-def connect_to_database(): #connect to Mysql
+def connect_database(): #connect to Mysql
     # Read MySQL config from config.txt file
     with open("config.txt") as f:
         host = f.readline().strip()
@@ -115,8 +115,8 @@ def Statistic(mycursor):
     plt.title(f"Budget vs Gross for Genre: {genre}")
 
     # label axis
-    budget_ticks = [tick / 10000000 for tick in plt.xticks()[0]]
-    gross_ticks = [tick / 10000000 for tick in plt.yticks()[0]]
+    budget_ticks = [tick / 1000000 for tick in plt.xticks()[0]]
+    gross_ticks = [tick / 1000000 for tick in plt.yticks()[0]]
     plt.xticks(plt.xticks()[0], ['${:.1f}M'.format(tick) for tick in budget_ticks])
     plt.yticks(plt.yticks()[0], ['${:.2f}M'.format(tick) for tick in gross_ticks])
 
@@ -126,7 +126,7 @@ def Statistic(mycursor):
 
 def menu():
     # Connect to the database
-    mydb = connect_to_database()
+    mydb = connect_database()
     mycursor = mydb.cursor()
 
     # Turn off safe mode ** Always need when start init the database
