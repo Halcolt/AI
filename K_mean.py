@@ -1,7 +1,9 @@
 import mysql.connector
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
+import random
 
 def connect_database(): #connect to Mysql
     # Read MySQL config from config.txt file
@@ -24,41 +26,132 @@ def connect_database(): #connect to Mysql
         print(f"Error connecting to MySQL: {e}") #print error message 
         exit()
 
-def euclid(x1, x2): 
+def euclid(x1, x2):
     # Calculate the Euclidean distance between two points
     distance = 0.0
-    for i in range(len(x1)): # both x1, x2: budget, rating, runtime
-        distance += (x1[i] - x2[i]) ** 2 # i dont' use sqrt here because there is no need to check for the distance, we only need to compare distance
+    for i in range(len(x1)):
+        distance += (x1[i] - x2[i]) ** 2
     return distance
 
-def predict_gross(mycursor,genre, budget, rating, runtime):
+def cluster_data(field_values, num_clusters):
+    # Convert data to a NumPy array
+    field_values = np.array(field_values).reshape(-1, 1)
+    field_values = np.sort(field_values, axis=0, kind='quicksort')
 
+    # Cluster data using KMeans
+    kmeans = KMeans(n_clusters=num_clusters, n_init=5)
+    labels = kmeans.fit_predict(field_values)
+
+    # Zip the data and labels together
+    clustered_data = list(zip(field_values, labels))
+
+    # Re-labeling so that both data and labels are in ascending order
+    old_label = -1
+    new_label = 0
+    for i, (value, label) in enumerate(clustered_data):
+        if label != old_label:
+            old_label = label
+            new_label += 1
+            label = new_label
+            clustered_data[i] = (value, label)
+        else:
+            label = new_label
+            clustered_data[i] = (value, label)
+    return clustered_data
+
+def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
     # Execute SELECT query to get movies data filtered by genre
     query = "SELECT Budget, Rating, Runtime, Gross FROM movies WHERE Genre=%s"
     mycursor.execute(query, (genre,))
 
-    # Load the data read drom database to data in array
+    # Load the data read from the database to an array
     data = list(mycursor.fetchall())
 
-    # Calculate the Euclidean distance between the input features and each data point
+    # Convert the tuples in data to lists
+    data = [list(row) for row in data]
+
+    # Append budget point to data[4]
+    for row in data:
+        row.append(row[0])
+
+    # Append runtime point to data[5]
+    for row in data:
+        row.append(row[2])
+
+    clustered_data = []
+    # Loop through rows 4 to 5 - budget_point to runtime_point
+    clustered_data.append(cluster_data([row[4] for row in data], num_clusters))
+    clustered_data.append(cluster_data([row[5] for row in data], num_clusters))
+
+    # Assign labels to data[4] and data[5]
+    for i in range(len(data)):
+        budget_point = data[i][4]
+        runtime_point = data[i][5]
+        for value, label in clustered_data[0]:
+            if budget_point <= value[0]:
+                data[i][4] = label
+                break
+        for value, label in clustered_data[1]:
+            if runtime_point <= value[0]:
+                data[i][5] = label
+                break
+    
+    # Calculate the average of budget_point, rating, and runtime_point
+    for row in data:
+        average = (row[1]+row[4]+row[5]) / 3
+        row.append(average)
+
+    # Print the updated data with labels
+    print("Data with Labels:")
+    for row in data:
+        print(row)
+
+    budget_point = []
+    for val in data:
+        value = val[0]  # Budget value
+        label = val[4]  # Budget label
+        distance = abs(value - budget)  # Calculate the absolute difference
+        budget_point.append((label, distance))
+    # Sort the budget_point in ascending order
+    budget_point.sort(key=lambda z: z[1])
+    # Get the label and value for the nearest neighbor
+    nearest_budget_label = budget_point[0][0]
+    print("Nearest Label and Value for Input Budget:")
+    print(f"Budget: {budget}, Label: {nearest_budget_label}")
+
+    runtime_point = []
+    for val in data:
+        value = val[2]  # runtime value
+        label = val[5]  # runtime label
+        distance = abs(value - runtime)  # Calculate the absolute difference
+        runtime_point.append((label, distance))
+    # Sort the runtime_point in ascending order
+    runtime_point.sort(key=lambda z: z[1])
+    # Get the label and value for the nearest neighbor
+    nearest_runtime_label = runtime_point[0][0]
+    print("Nearest Label and Value for Input runtime:")
+    print(f"runtimet: {runtime}, Label: {nearest_runtime_label}")
+
+    average_point = (nearest_runtime_label+nearest_budget_label+rating)/3
+    print(average_point)
+
     distances = []
-    for val in data: # run through all row
-        x = val[:-1]  # Features (budget, rating, runtime) || ": -1" all collumn except the last one (gross)
-        y = val[-1]   # Target variable (gross) || last column
-        distance = euclid([budget, rating, runtime], x) # first is the data from the movie need to compare, x is data from database
-        distances.append((x, y, distance))
+    for row in data:
+        distance = abs(row[6] - average_point)
+        distances.append((row[6], distance))
 
-    # sort the [2] element (distance) in ascending order
-    distances.sort(key=lambda z: z[2]) 
+    # Get the top 5 nearest neighbors
+    top_5_nearest = distances[:5]
 
-    k=5 # set k for the below calculation
+    # Calculate the average profit of the top 5 nearest neighbors
+    total_profit = 0
+    for row in top_5_nearest:
+        index = int(row[0])
+        total_profit += data[index][3]
+        print(total_profit)
+    print(total_profit)
+    predicted_gross = total_profit / 5
 
-    # Select the k nearest neighbors
-    neighbors = distances[:k] # take the first 5 shortest distance 
-
-    # Calculate the average gross of the k nearest neighbors
-    total_gross = sum(neighbor[1] for neighbor in neighbors)
-    predicted_gross = total_gross / k   # we set the predict one to be the average of the 5 closest
     return predicted_gross
 
 def calculate_average_values(mycursor, genre):
@@ -172,10 +265,15 @@ menu()
 '''
 #test data
 genre = ("Action")
-budget = 100000
+budget = 1000000
 rating = 7.5
 runtime = 120
 
+
+genre = ("Science Fiction")
+budget = 10000000
+rating = 8
+runtime = 120
 '''
 
 
