@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
-import random
+
 
 def connect_database(): #connect to Mysql
     # Read MySQL config from config.txt file
@@ -140,7 +140,8 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
         distance = abs(row[6] - average_point)
         distances.append((row[6], distance))
 
-    # Get the top 5 nearest neighbors
+        # Get the top 5 nearest neighbors
+    distances.sort(key=lambda x: x[1])
     top_5_nearest = distances[:5]
 
     # Calculate the average profit of the top 5 nearest neighbors
@@ -258,7 +259,6 @@ def menu():
     mycursor.close()
     mydb.close()
 
-# Main program
 menu()
 
 
