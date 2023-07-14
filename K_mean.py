@@ -102,9 +102,9 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
         row.append(average)
 
     # Print the updated data with labels
-    print("Data with Labels:")
-    for row in data:
-        print(row)
+    #print("Data with Labels:")
+    #for row in data:
+        #print(row)
 
     budget_point = []
     for val in data:
@@ -116,8 +116,8 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
     budget_point.sort(key=lambda z: z[1])
     # Get the label and value for the nearest neighbor
     nearest_budget_label = budget_point[0][0]
-    print("Nearest Label and Value for Input Budget:")
-    print(f"Budget: {budget}, Label: {nearest_budget_label}")
+    #print("Nearest Label and Value for Input Budget:")
+    #print(f"Budget: {budget}, Label: {nearest_budget_label}")
 
     runtime_point = []
     for val in data:
@@ -129,11 +129,11 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
     runtime_point.sort(key=lambda z: z[1])
     # Get the label and value for the nearest neighbor
     nearest_runtime_label = runtime_point[0][0]
-    print("Nearest Label and Value for Input runtime:")
-    print(f"runtimet: {runtime}, Label: {nearest_runtime_label}")
+    # print("Nearest Label and Value for Input runtime:")
+    # print(f"runtimet: {runtime}, Label: {nearest_runtime_label}")
 
     average_point = (nearest_runtime_label+nearest_budget_label+rating)/3
-    print(average_point)
+    #print(average_point)
 
     distances = []
     for row in data:
@@ -149,8 +149,8 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
     for row in top_5_nearest:
         index = int(row[0])
         total_profit += data[index][3]
-        print(total_profit)
-    print(total_profit)
+        #print(total_profit)
+    #print(total_profit)
     predicted_gross = total_profit / 5
 
     return predicted_gross
