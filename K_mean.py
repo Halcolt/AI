@@ -25,14 +25,14 @@ def connect_database(): #connect to Mysql
     except mysql.connector.Error as e:
         print(f"Error connecting to MySQL: {e}") #print error message 
         exit()
-
+"""
 def euclid(x1, x2):
     # Calculate the Euclidean distance between two points
     distance = 0.0
     for i in range(len(x1)):
         distance += (x1[i] - x2[i]) ** 2
     return distance
-
+"""
 def cluster_data(field_values, num_clusters):
     # Convert data to a NumPy array
     field_values = np.array(field_values).reshape(-1, 1)
@@ -102,9 +102,9 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
         row.append(average)
 
     # Print the updated data with labels
-    #print("Data with Labels:")
-    #for row in data:
-        #print(row)
+    print("Data with Labels:")
+    for row in data:
+        print(row)
 
     budget_point = []
     for val in data:
@@ -142,16 +142,16 @@ def predict_gross(mycursor, genre, budget, rating, runtime, num_clusters=10):
 
         # Get the top 5 nearest neighbors
     distances.sort(key=lambda x: x[1])
-    top_5_nearest = distances[:5]
+    top_3_nearest = distances[:3]
 
     # Calculate the average profit of the top 5 nearest neighbors
     total_profit = 0
-    for row in top_5_nearest:
+    for row in top_3_nearest:
         index = int(row[0])
         total_profit += data[index][3]
         #print(total_profit)
     #print(total_profit)
-    predicted_gross = total_profit / 5
+    predicted_gross = total_profit / 3
 
     return predicted_gross
 
